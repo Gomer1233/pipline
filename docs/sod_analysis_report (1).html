@@ -1,0 +1,775 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SoD-анализ платформ X5 — Разделение обязанностей</title>
+<script src="https://cdn.jsdelivr.net/npm/mermaid/dist/mermaid.min.js"></script>
+<style>
+:root {
+  --bg: #0d1117;
+  --card: #161b22;
+  --accent: #58a6ff;
+  --text: #c9d1d9;
+  --text-muted: #8b949e;
+  --border: #30363d;
+  --critical: #ff4444;
+  --high: #ff6b6b;
+  --medium: #ffd93d;
+  --low: #69db7c;
+  --nav-bg: #161b22;
+  --table-stripe: #1c2128;
+  --table-hover: #21262d;
+}
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  line-height: 1.6;
+  font-size: 15px;
+}
+.container {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 20px;
+}
+header {
+  text-align: center;
+  padding: 40px 20px 30px;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 30px;
+}
+header h1 {
+  font-size: 2rem;
+  color: var(--accent);
+  margin-bottom: 8px;
+}
+header .subtitle {
+  color: var(--text-muted);
+  font-size: 1rem;
+}
+header .date {
+  color: var(--text-muted);
+  font-size: 0.9rem;
+  margin-top: 6px;
+}
+nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  background: var(--nav-bg);
+  border-bottom: 1px solid var(--border);
+  padding: 12px 20px;
+  margin-bottom: 30px;
+  display: flex;
+  gap: 20px;
+  justify-content: center;
+  flex-wrap: wrap;
+}
+nav a {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 500;
+  padding: 6px 14px;
+  border-radius: 6px;
+  transition: background 0.2s;
+}
+nav a:hover {
+  background: rgba(88,166,255,0.1);
+}
+section {
+  margin-bottom: 50px;
+}
+h2 {
+  font-size: 1.6rem;
+  color: var(--accent);
+  margin-bottom: 20px;
+  padding-bottom: 10px;
+  border-bottom: 2px solid var(--border);
+}
+h3 {
+  font-size: 1.2rem;
+  color: var(--text);
+  margin: 25px 0 15px;
+}
+h4 {
+  font-size: 1.05rem;
+  color: var(--text-muted);
+  margin: 20px 0 10px;
+}
+.card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+.stats-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: 15px;
+  margin-bottom: 25px;
+}
+.stat-card {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 15px;
+  text-align: center;
+}
+.stat-card .number {
+  font-size: 2rem;
+  font-weight: 700;
+  color: var(--accent);
+}
+.stat-card .label {
+  font-size: 0.85rem;
+  color: var(--text-muted);
+  margin-top: 4px;
+}
+table {
+  width: 100%;
+  border-collapse: collapse;
+  margin: 15px 0;
+  font-size: 0.9rem;
+}
+th {
+  background: var(--card);
+  color: var(--accent);
+  text-align: left;
+  padding: 10px 12px;
+  border-bottom: 2px solid var(--border);
+  font-weight: 600;
+  white-space: nowrap;
+}
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+tr:nth-child(even) { background: var(--table-stripe); }
+tr:hover { background: var(--table-hover); }
+.badge {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.badge-critical { background: rgba(255,68,68,0.15); color: var(--critical); border: 1px solid var(--critical); }
+.badge-high { background: rgba(255,107,107,0.15); color: var(--high); border: 1px solid var(--high); }
+.badge-medium { background: rgba(255,217,61,0.15); color: var(--medium); border: 1px solid var(--medium); }
+.badge-low { background: rgba(105,219,124,0.15); color: var(--low); border: 1px solid var(--low); }
+.mermaid-container {
+  background: var(--card);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 20px;
+  margin: 20px 0;
+  overflow-x: auto;
+}
+.mermaid {
+  display: flex;
+  justify-content: center;
+}
+.top5-list {
+  list-style: none;
+  padding: 0;
+}
+.top5-list li {
+  padding: 12px 15px;
+  margin-bottom: 8px;
+  background: var(--card);
+  border-left: 4px solid var(--critical);
+  border-radius: 0 8px 8px 0;
+}
+.top5-list li:nth-child(2) { border-left-color: var(--high); }
+.top5-list li:nth-child(3) { border-left-color: var(--high); }
+.top5-list li:nth-child(4) { border-left-color: var(--medium); }
+.top5-list li:nth-child(5) { border-left-color: var(--medium); }
+.top5-list .rank {
+  font-weight: 700;
+  color: var(--accent);
+  margin-right: 10px;
+}
+.info-box {
+  background: rgba(88,166,255,0.05);
+  border: 1px solid rgba(88,166,255,0.2);
+  border-radius: 8px;
+  padding: 15px;
+  margin: 15px 0;
+}
+.info-box strong { color: var(--accent); }
+.tag {
+  display: inline-block;
+  background: rgba(88,166,255,0.1);
+  color: var(--accent);
+  padding: 2px 8px;
+  border-radius: 4px;
+  font-size: 0.8rem;
+  margin: 2px;
+}
+.summary-table td:first-child { font-weight: 600; }
+.footer {
+  text-align: center;
+  padding: 30px;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+  border-top: 1px solid var(--border);
+  margin-top: 40px;
+}
+@media (max-width: 768px) {
+  .container { padding: 10px; }
+  header h1 { font-size: 1.4rem; }
+  h2 { font-size: 1.3rem; }
+  table { font-size: 0.8rem; }
+  th, td { padding: 6px 8px; }
+  .stats-row { grid-template-columns: repeat(2, 1fr); }
+  nav { gap: 10px; }
+  nav a { padding: 4px 10px; font-size: 0.85rem; }
+}
+@media print {
+  :root {
+    --bg: #ffffff;
+    --card: #f8f9fa;
+    --accent: #0366d6;
+    --text: #24292e;
+    --text-muted: #586069;
+    --border: #d1d5da;
+    --nav-bg: #f0f0f0;
+    --table-stripe: #f6f8fa;
+    --table-hover: #f6f8fa;
+  }
+  body { background: #fff; color: #24292e; }
+  nav { position: static; background: #f0f0f0; }
+  .card, .stat-card, .mermaid-container { background: #f8f9fa; border-color: #d1d5da; }
+  th { background: #f0f0f0; }
+  .badge-critical { background: #ffeef0; color: #d73a49; border-color: #d73a49; }
+  .badge-high { background: #fff5f5; color: #d73a49; border-color: #d73a49; }
+  .badge-medium { background: #fff8c5; color: #735c0f; border-color: #b08800; }
+  .badge-low { background: #dcffe4; color: #22863a; border-color: #22863a; }
+  .info-box { background: #f1f8ff; border-color: #a8d8ff; }
+  .top5-list li { background: #f8f9fa; }
+  section { page-break-inside: avoid; }
+  .mermaid-container { page-break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>SoD-анализ платформ X5 — Разделение обязанностей</h1>
+  <div class="subtitle">Сводный отчёт по платформам СФЕРА (HR) и Орбита (коммерческая)</div>
+  <div class="date">Дата: 21.09.2026</div>
+</header>
+
+<nav>
+  <a href="#sfera">📊 СФЕРА (HR)</a>
+  <a href="#orbita">🚀 Орбита (Коммерческая)</a>
+  <a href="#summary">📋 Сводка</a>
+</nav>
+
+<div class="container">
+
+<!-- ==================== РАЗДЕЛ 1: СФЕРА ==================== -->
+<section id="sfera">
+  <h2>Раздел 1: Платформа СФЕРА (HR)</h2>
+  <div class="info-box">
+    <strong>Владелец:</strong> HR-платформа X5 Group &nbsp;|&nbsp; <strong>URL:</strong> hr.sfera.x5.ru &nbsp;|&nbsp; <strong>КЕ:</strong> КЕ01216530
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="number">8</div><div class="label">Продуктов</div></div>
+    <div class="stat-card"><div class="number">37</div><div class="label">SoD-сценариев</div></div>
+    <div class="stat-card"><div class="number">10</div><div class="label">Кросс-рисков</div></div>
+    <div class="stat-card"><div class="number">9</div><div class="label">Гэпов</div></div>
+  </div>
+
+  <h3>Продукты платформы</h3>
+  <div class="card">
+    <table>
+      <thead><tr><th>#</th><th>Продукт</th><th>SoD-сценарии</th><th>Кол-во</th><th>Сквозные системы</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>HR Core</td><td>S1–S18</td><td>18</td><td>UHRS, SS, ЭЛМК, ЭКДО, ТОРГ, МСЗ, ЭЦП</td></tr>
+        <tr><td>2</td><td>Подбор (АТС)</td><td>P1–P5</td><td>5</td><td>UHRS, Skillaz, Strapi CMS</td></tr>
+        <tr><td>3</td><td>Вознаграждение и Льготы</td><td>B1–B4</td><td>4</td><td>UHRS, SS, ЭЦП</td></tr>
+        <tr><td>4</td><td>Целеполагание</td><td>T1–T2</td><td>2</td><td>UHRS, kafka-rest</td></tr>
+        <tr><td>5</td><td>HR-Аналитика</td><td>A1–A2</td><td>2</td><td>UHRS, SS</td></tr>
+        <tr><td>6</td><td>Адаптация</td><td>D1–D2</td><td>2</td><td>UHRS, Skillaz</td></tr>
+        <tr><td>7</td><td>Биржа смен</td><td>S21–S22</td><td>2</td><td>UHRS, kafka-rest</td></tr>
+        <tr><td>8</td><td>Внешний сотрудник</td><td>W1–W2</td><td>2</td><td>UHRS, ЭЦП, ТОРГ</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>SoD-риски по продуктам</h3>
+  <div class="card">
+    <h4>HR Core (S1–S18)</h4>
+    <table>
+      <thead><tr><th>ID</th><th>Сценарий</th><th>Конфликт</th><th>Уровень</th><th>Категория</th></tr></thead>
+      <tbody>
+        <tr><td>S1</td><td>Приём на работу: создание + активация + ЗП</td><td>CUS + AUT</td><td><span class="badge badge-high">Высокий</span></td><td>K1</td></tr>
+        <tr><td>S2</td><td>Увольнение: инициация + расчёт + закрытие</td><td>CUS + AUT + REC</td><td><span class="badge badge-high">Высокий</span></td><td>K1</td></tr>
+        <tr><td>S3</td><td>Перевод: смена должности + смена ЗП</td><td>CUS + AUT</td><td><span class="badge badge-high">Высокий</span></td><td>K1</td></tr>
+        <tr><td>S4</td><td>РВД: назначение + изменение + отмена</td><td>CUS + AUT + REC</td><td><span class="badge badge-high">Высокий</span></td><td>K1</td></tr>
+        <tr><td>S5</td><td>Дополнительные соглашения: создание + подписание</td><td>CUS + VER</td><td><span class="badge badge-high">Высокий</span></td><td>K2</td></tr>
+        <tr><td>S6</td><td>Изменение ЗП: инициация + одобрение</td><td>CUS + AUT</td><td><span class="badge badge-medium">Средний</span></td><td>K3</td></tr>
+        <tr><td>S7</td><td>Льготы: назначение + отмена</td><td>CUS + AUT</td><td><span class="badge badge-medium">Средний</span></td><td>K3</td></tr>
+        <tr><td>S8</td><td>График работы: создание + изменение</td><td>CUS + AUT</td><td><span class="badge badge-medium">Средний</span></td><td>K3</td></tr>
+        <tr><td>S9</td><td>Отпуск: заявка + согласование</td><td>CUS + AUT</td><td><span class="badge badge-medium">Средний</span></td><td>K3</td></tr>
+        <tr><td>S10</td><td>ЗП-карта: формирование + начисление + выплата</td><td>CUS + AUT + REC</td><td><span class="badge badge-medium">Средний</span></td><td>K1</td></tr>
+        <tr><td>S11</td><td>Табелирование: ввод + корректировка</td><td>CUS + REC</td><td><span class="badge badge-low">Низкий</span></td><td>K3</td></tr>
+        <tr><td>S12</td><td>Данные сотрудника: просмотр + редактирование</td><td>CUS + VER</td><td><span class="badge badge-low">Низкий</span></td><td>K3</td></tr>
+        <tr><td>S13</td><td>Документооборот: создание + утверждение</td><td>CUS + AUT</td><td><span class="badge badge-low">Низкий</span></td><td>K3</td></tr>
+        <tr><td>S14</td><td>ЭЛМК: подпись + отправка</td><td>CUS + VER</td><td><span class="badge badge-low">Низкий</span></td><td>K3</td></tr>
+        <tr><td>S15</td><td>МСЗ: регистрация + закрытие</td><td>CUS + AUT</td><td><span class="badge badge-low">Низкий</span></td><td>K3</td></tr>
+        <tr><td>S16</td><td>ЭЦП: выдача + отзыв</td><td>CUS + AUT</td><td><span class="badge badge-low">Низкий</span></td><td>K3</td></tr>
+        <tr><td>S17</td><td>Администрирование: создание + удаление пользователей</td><td>CUS + AUT</td><td><span class="badge badge-low">Низкий</span></td><td>K3</td></tr>
+        <tr><td>S18</td><td>Отчёты: формирование + экспорт</td><td>CUS + REC</td><td><span class="badge badge-low">Низкий</span></td><td>K3</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Подбор / АТС (P1–P5)</h4>
+    <table>
+      <thead><tr><th>ID</th><th>Сценарий</th><th>Конфликт</th><th>Уровень</th><th>Категория</th></tr></thead>
+      <tbody>
+        <tr><td>P1</td><td>Вакансия: создание + закрытие + назначение</td><td>CUS + AUT</td><td><span class="badge badge-high">Высокий</span></td><td>K2</td></tr>
+        <tr><td>P2</td><td>Кандидат: добавление + оценка + оффер</td><td>CUS + AUT</td><td><span class="badge badge-medium">Средний</span></td><td>K2</td></tr>
+        <tr><td>P3</td><td>Интервью: назначение + фиксация результата</td><td>CUS + REC</td><td><span class="badge badge-medium">Средний</span></td><td>K3</td></tr>
+        <tr><td>P4</td><td>Оффер: формирование + отправка</td><td>CUS + AUT</td><td><span class="badge badge-medium">Средний</span></td><td>K1</td></tr>
+        <tr><td>P5</td><td>Скиллаз: загрузка + верификация</td><td>CUS + VER</td><td><span class="badge badge-low">Низкий</span></td><td>K3</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Вознаграждение и Льготы (B1–B4)</h4>
+    <table>
+      <thead><tr><th>ID</th><th>Сценарий</th><th>Конфликт</th><th>Уровень</th><th>Категория</th></tr></thead>
+      <tbody>
+        <tr><td>B1</td><td>Бонус: расчёт + начисление</td><td>CUS + AUT</td><td><span class="badge badge-high">Высокий</span></td><td>K1</td></tr>
+        <tr><td>B2</td><td>ЗП-карта: формирование + выплата</td><td>CUS + REC</td><td><span class="badge badge-high">Высокий</span></td><td>K1</td></tr>
+        <tr><td>B3</td><td>Льгота: назначение + отмена</td><td>CUS + AUT</td><td><span class="badge badge-medium">Средний</span></td><td>K3</td></tr>
+        <tr><td>B4</td><td>Премия: инициация + одобрение</td><td>CUS + AUT</td><td><span class="badge badge-medium">Средний</span></td><td>K3</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Целеполагание (T1–T2)</h4>
+    <table>
+      <thead><tr><th>ID</th><th>Сценарий</th><th>Конфликт</th><th>Уровень</th><th>Категория</th></tr></thead>
+      <tbody>
+        <tr><td>T1</td><td>OKR: установка + оценка + бонус</td><td>CUS + AUT + REC</td><td><span class="badge badge-high">Высокий</span></td><td>K1</td></tr>
+        <tr><td>T2</td><td>Цели: редактирование + пересчёт</td><td>CUS + AUT</td><td><span class="badge badge-medium">Средний</span></td><td>K3</td></tr>
+      </tbody>
+    </table>
+
+    <h4>HR-Аналитика (A1–A2)</h4>
+    <table>
+      <thead><tr><th>ID</th><th>Сценарий</th><th>Конфликт</th><th>Уровень</th><th>Категория</th></tr></thead>
+      <tbody>
+        <tr><td>A1</td><td>Отчёт: формирование + изменение данных</td><td>CUS + REC</td><td><span class="badge badge-medium">Средний</span></td><td>K3</td></tr>
+        <tr><td>A2</td><td>Дашборд: настройка + экспорт</td><td>CUS + AUT</td><td><span class="badge badge-low">Низкий</span></td><td>K3</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Адаптация (D1–D2)</h4>
+    <table>
+      <thead><tr><th>ID</th><th>Сценарий</th><th>Конфликт</th><th>Уровень</th><th>Категория</th></tr></thead>
+      <tbody>
+        <tr><td>D1</td><td>План адаптации: создание + закрытие</td><td>CUS + AUT</td><td><span class="badge badge-medium">Средний</span></td><td>K3</td></tr>
+        <tr><td>D2</td><td>Онбординг: назначение + верификация</td><td>CUS + VER</td><td><span class="badge badge-low">Низкий</span></td><td>K3</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Биржа смен (S21–S22)</h4>
+    <table>
+      <thead><tr><th>ID</th><th>Сценарий</th><th>Конфликт</th><th>Уровень</th><th>Категория</th></tr></thead>
+      <tbody>
+        <tr><td>S21</td><td>РВД: назначение смены + подтверждение</td><td>CUS + AUT</td><td><span class="badge badge-high">Высокий</span></td><td>K1</td></tr>
+        <tr><td>S22</td><td>Смена: перенос + отмена</td><td>CUS + REC</td><td><span class="badge badge-medium">Средний</span></td><td>K3</td></tr>
+      </tbody>
+    </table>
+
+    <h4>Внешний сотрудник (W1–W2)</h4>
+    <table>
+      <thead><tr><th>ID</th><th>Сценарий</th><th>Конфликт</th><th>Уровень</th><th>Категория</th></tr></thead>
+      <tbody>
+        <tr><td>W1</td><td>Договор: создание + подписание + доступ</td><td>CUS + AUT + VER</td><td><span class="badge badge-high">Высокий</span></td><td>K2</td></tr>
+        <tr><td>W2</td><td>Доступ: выдача + отзыв</td><td>CUS + AUT</td><td><span class="badge badge-medium">Средний</span></td><td>K1</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Кросс-продуктовые риски (X1–X10)</h3>
+  <div class="card">
+    <table>
+      <thead><tr><th>ID</th><th>Продукты</th><th>Сценарий</th><th>Уровень</th><th>Категория</th><th>Митигация</th></tr></thead>
+      <tbody>
+        <tr><td>X1</td><td>HR Core × Вознаграждение</td><td>Изменение ЗП + начисление бонуса одним лицом</td><td><span class="badge badge-critical">Критический</span></td><td>K1</td><td>Разделение ролей HR-оператор / ЗП-аналитик</td></tr>
+        <tr><td>X2</td><td>Подбор × HR Core</td><td>Кандидат → оффер → приём на работу одним лицом</td><td><span class="badge badge-high">Высокий</span></td><td>K2</td><td>Обязательное согласование рекрутера ≠ HR-оператора</td></tr>
+        <tr><td>X3</td><td>Целеполагание × Вознаграждение</td><td>Оценка OKR + начисление бонуса</td><td><span class="badge badge-high">Высокий</span></td><td>K1</td><td>Независимая верификация оценки</td></tr>
+        <tr><td>X4</td><td>HR Core × Внешний сотрудник</td><td>Создание договора + выдача доступа</td><td><span class="badge badge-high">Высокий</span></td><td>K2</td><td>Двухэтапное согласование доступа</td></tr>
+        <tr><td>X5</td><td>HR Core × Биржа смен</td><td>РВД: назначение + подтверждение смены</td><td><span class="badge badge-high">Высокий</span></td><td>K1</td><td>Запрет совмещения ролей</td></tr>
+        <tr><td>X6</td><td>HR Core × HR-Аналитика</td><td>Изменение данных + формирование отчёта</td><td><span class="badge badge-medium">Средний</span></td><td>K3</td><td>Read-only доступ аналитика</td></tr>
+        <tr><td>X7</td><td>Вознаграждение × HR Core (ЗП)</td><td>ЗП-карта: S10/B2 — формирование + выплата</td><td><span class="badge badge-critical">Критический</span></td><td>K1</td><td>Трёхэтапный контроль: расчёт → верификация → выплата</td></tr>
+        <tr><td>X8</td><td>Подбор × Адаптация</td><td>Назначение + план адаптации одним лицом</td><td><span class="badge badge-medium">Средний</span></td><td>K3</td><td>Разделение ролей</td></tr>
+        <tr><td>X9</td><td>Внешний сотрудник × ТОРГ</td><td>Доступ к внешним системам + договор</td><td><span class="badge badge-high">Высокий</span></td><td>K2</td><td>Аудит доступов, автоотзыв</td></tr>
+        <tr><td>X10</td><td>HR Core × Адаптация × Подбор</td><td>Полный цикл: подбор → приём → адаптация</td><td><span class="badge badge-medium">Средний</span></td><td>K2</td><td>Workflow с обязательными контрольными точками</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Гэпы (G1–G9)</h3>
+  <div class="card">
+    <table>
+      <thead><tr><th>ID</th><th>Гэп</th><th>Уровень</th><th>У кого</th><th>Что нужно</th><th>Дедлайн</th></tr></thead>
+      <tbody>
+        <tr><td>G1</td><td>Нет RBAC-матрицы HR Core</td><td><span class="badge badge-critical">Критический</span></td><td>HR-платформа</td><td>Полная матрица ролей и прав</td><td>30 дней</td></tr>
+        <tr><td>G2</td><td>Нет audit trail в УHRS</td><td><span class="badge badge-critical">Критический</span></td><td>Инфраструктура</td><td>Логирование всех операций</td><td>45 дней</td></tr>
+        <tr><td>G3</td><td>Нет разделения ЗП-функций</td><td><span class="badge badge-critical">Критический</span></td><td>Вознаграждение</td><td>Трёхэтапный контроль ЗП</td><td>30 дней</td></tr>
+        <tr><td>G4</td><td>Нет workflow-аппрувов в АТС</td><td><span class="badge badge-high">Высокий</span></td><td>Подбор</td><td>Обязательные согласования</td><td>45 дней</td></tr>
+        <tr><td>G5</td><td>Нет верификации РВД</td><td><span class="badge badge-high">Высокий</span></td><td>HR Core</td><td>Независимая верификация РВД</td><td>30 дней</td></tr>
+        <tr><td>G6</td><td>Нет контроля внешних доступов</td><td><span class="badge badge-high">Высокий</span></td><td>Внешний сотрудник</td><td>Автоотзыв + аудит</td><td>60 дней</td></tr>
+        <tr><td>G7</td><td>Нет сегментации HR-Аналитики</td><td><span class="badge badge-medium">Средний</span></td><td>HR-Аналитика</td><td>Read-only для аналитиков</td><td>60 дней</td></tr>
+        <tr><td>G8</td><td>Нет контроля ЭЦП</td><td><span class="badge badge-medium">Средний</span></td><td>Инфраструктура</td><td>Аудит выдачи/отзыва ЭЦП</td><td>90 дней</td></tr>
+        <tr><td>G9</td><td>Нет мониторинга kafka-rest</td><td><span class="badge badge-low">Низкий</span></td><td>Инфраструктура</td><td>Алерты на аномалии</td><td>90 дней</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Топ-5 рисков СФЕРА</h3>
+  <div class="card">
+    <ol class="top5-list">
+      <li><span class="rank">1.</span> <strong>ЗП-карта (S10/B2/X7)</strong> — формирование, начисление и выплата ЗП одним лицом. <span class="badge badge-critical">Критический</span> K1</li>
+      <li><span class="rank">2.</span> <strong>Приём/увольнение (S1–S3)</strong> — полный цикл HR-операций без разделения. <span class="badge badge-high">Высокий</span> K1</li>
+      <li><span class="rank">3.</span> <strong>OKR → Бонусы (T1/X3)</strong> — оценка целей и начисление бонуса одним лицом. <span class="badge badge-high">Высокий</span> K1</li>
+      <li><span class="rank">4.</span> <strong>РВД (S4/X5/S21)</strong> — назначение, изменение и подтверждение смен. <span class="badge badge-high">Высокий</span> K1</li>
+      <li><span class="rank">5.</span> <strong>АТС (P1/X2)</strong> — полный цикл подбора: вакансия → оффер → приём. <span class="badge badge-high">Высокий</span> K2</li>
+    </ol>
+  </div>
+
+  <h3>Архитектура СФЕРА</h3>
+  <div class="mermaid-container">
+    <pre class="mermaid">
+flowchart TB
+    subgraph Sfera["Платформа СФЕРА (HR)"]
+        direction TB
+        Core["HR Core<br/>S1-S18"]
+        ATS["Подбор / АТС<br/>P1-P5"]
+        Comp["Вознаграждение<br/>и Льготы<br/>B1-B4"]
+        OKR["Целеполагание<br/>T1-T2"]
+        Analytics["HR-Аналитика<br/>A1-A2"]
+        Onboard["Адаптация<br/>D1-D2"]
+        Shifts["Биржа смен<br/>S21-S22"]
+        ExtEmp["Внешний<br/>сотрудник<br/>W1-W2"]
+    end
+
+    subgraph Cross["Сквозные системы"]
+        UHRS["UHRS"]
+        SS["SS"]
+        ELMK["ЭЛМК"]
+        EKDO["ЭКДО"]
+        TORG["ТОРГ"]
+        MSZ["МСЗ"]
+        ECP["ЭЦП"]
+        Skillaz["Skillaz"]
+        Strapi["Strapi CMS"]
+        Kafka["kafka-rest"]
+    end
+
+    Core --> UHRS
+    Core --> SS
+    Core --> ELMK
+    Core --> EKDO
+    Core --> TORG
+    Core --> MSZ
+    Core --> ECP
+    ATS --> UHRS
+    ATS --> Skillaz
+    ATS --> Strapi
+    Comp --> UHRS
+    Comp --> SS
+    Comp --> ECP
+    OKR --> UHRS
+    OKR --> Kafka
+    Analytics --> UHRS
+    Analytics --> SS
+    Onboard --> UHRS
+    Onboard --> Skillaz
+    Shifts --> UHRS
+    Shifts --> Kafka
+    ExtEmp --> UHRS
+    ExtEmp --> ECP
+    ExtEmp --> TORG
+
+    style Sfera fill:#161b22,stroke:#58a6ff,stroke-width:2px
+    style Cross fill:#0d1117,stroke:#8b949e,stroke-width:1px
+    style Core fill:#1c2128,stroke:#ff4444
+    style Comp fill:#1c2128,stroke:#ff6b6b
+    style ATS fill:#1c2128,stroke:#ffd93d
+    </pre>
+  </div>
+</section>
+
+<!-- ==================== РАЗДЕЛ 2: ОРБИТА ==================== -->
+<section id="orbita">
+  <h2>Раздел 2: Платформа Орбита (Коммерческая)</h2>
+  <div class="info-box">
+    <strong>Владелец:</strong> Денис Вечканов (ком. дир. ТС5) &nbsp;|&nbsp; <strong>Спонсор:</strong> Екатерина Лобачева (президент X5)
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card"><div class="number">10</div><div class="label">Продуктов</div></div>
+    <div class="stat-card"><div class="number">23+</div><div class="label">ИС</div></div>
+    <div class="stat-card"><div class="number">11</div><div class="label">SoD-сценариев</div></div>
+    <div class="stat-card"><div class="number">7</div><div class="label">Кросс-рисков</div></div>
+    <div class="stat-card"><div class="number">5</div><div class="label">Гэпов</div></div>
+  </div>
+
+  <h3>Продукты платформы</h3>
+  <div class="card">
+    <table>
+      <thead><tr><th>#</th><th>Продукт</th><th>ИС / Компоненты</th><th>SoD-сценарии</th><th>Кол-во</th></tr></thead>
+      <tbody>
+        <tr><td>1</td><td>Promo</td><td>What if, Catman, DS-пайплайн</td><td>S1, S2</td><td>2</td></tr>
+        <tr><td>2</td><td>Интеллектуальные цены</td><td>OPEC, Транспорт цен</td><td>S3, S4</td><td>2</td></tr>
+        <tr><td>3</td><td>ЛККМ</td><td>Nego, ARM</td><td>S5, S6</td><td>2</td></tr>
+        <tr><td>4</td><td>ЦУПП</td><td>Планограммы, ДТО</td><td>S7, S8</td><td>2</td></tr>
+        <tr><td>5</td><td>Диалог 2.0</td><td>Dialog.x5.ru</td><td>—</td><td>0</td></tr>
+        <tr><td>6</td><td>Core Services</td><td>RAP (КЕ01867517), ПОД КА (9 микросервисов)</td><td>—</td><td>0</td></tr>
+        <tr><td>7</td><td>RGM</td><td>RGM-дашборд</td><td>—</td><td>0</td></tr>
+        <tr><td>8</td><td>Управление потребностями</td><td>Контейнер</td><td>—</td><td>0</td></tr>
+        <tr><td>9</td><td>Жизненный цикл PLU</td><td>404 (недоступен)</td><td>—</td><td>0</td></tr>
+        <tr><td>10</td><td><strong>ЦАК</strong> (Цифровой Ассортиментный Workflow)</td><td>man.staff.orbita.x5.ru, ТОРГ ERP (SAP), ESM, ПЦП, SRP, НЦА, квоты</td><td>ЦАК-1, ЦАК-2, ЦАК-3</td><td>3</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>SoD-риски по продуктам</h3>
+  <div class="card">
+    <h4>Оригинальные риски (S1–S8)</h4>
+    <table>
+      <thead><tr><th>ID</th><th>Продукт</th><th>Сценарий</th><th>Конфликт</th><th>Уровень</th><th>Категория</th></tr></thead>
+      <tbody>
+        <tr><td>S1</td><td>Promo (What if / Catman)</td><td>Создание промо-кампании + запуск без согласования</td><td>AUT + CUS</td><td><span class="badge badge-high">Высокий</span></td><td>K1</td></tr>
+        <tr><td>S2</td><td>Promo (DS-пайплайн)</td><td>Загрузка данных + изменение модели + публикация</td><td>CUS + REC</td><td><span class="badge badge-high">Высокий</span></td><td>K1</td></tr>
+        <tr><td>S3</td><td>Цены (OPEC)</td><td>Формирование цены + применение + отмена</td><td>AUT + CUS</td><td><span class="badge badge-critical">Критический</span></td><td>K1</td></tr>
+        <tr><td>S4</td><td>Цены (OPEC + Транспорт цен)</td><td>Изменение цены + перерасчёт + отправка</td><td>CUS + REC</td><td><span class="badge badge-high">Высокий</span></td><td>K2</td></tr>
+        <tr><td>S5</td><td>ЛККМ (Nego)</td><td>Переговоры + фиксация условий + отправка</td><td>CUS + AUT</td><td><span class="badge badge-high">Высокий</span></td><td>K1</td></tr>
+        <tr><td>S6</td><td>ЛККМ (ARM)</td><td>Загрузка матрицы + верификация + публикация</td><td>CUS + VER</td><td><span class="badge badge-medium">Средний</span></td><td>K2</td></tr>
+        <tr><td>S7</td><td>ЦУПП (Планограммы)</td><td>Создание планограммы + утверждение + отправка в магазин</td><td>AUT + CUS</td><td><span class="badge badge-medium">Средний</span></td><td>K2</td></tr>
+        <tr><td>S8</td><td>ЦУПП (ДТО)</td><td>Формирование ДТО + корректировка + отправка</td><td>AUT + CUS + REC</td><td><span class="badge badge-critical">Критический</span></td><td>K1</td></tr>
+      </tbody>
+    </table>
+
+    <h4>ЦАК — Цифровой Ассортиментный Workflow (ЦАК-1–ЦАК-3)</h4>
+    <div class="info-box">
+      <strong>URL:</strong> man.staff.orbita.x5.ru &nbsp;|&nbsp; <strong>Scope:</strong> ТС5 и ТСХ<br>
+      <strong>Интеграции:</strong> ТОРГ ERP (SAP), ESM, ПЦП, витрины данных (SRP, НЦА, квоты)<br>
+      <strong>Роли:</strong> Специалист категории, Согласующий, Администратор системы<br>
+      <strong>RBAC:</strong> по факультетам (DIR0002, DIR0033, DIR0048), матрица — lkkm.x5.ru/matrix/[ID]<br>
+      <strong>Процесс:</strong> Excel-загрузка → Черновик → Согласование (2 этапа) → КИПы (логистика) → Отправка в ТОРГ ERP → Мониторинг
+    </div>
+    <table>
+      <thead><tr><th>ID</th><th>Сценарий</th><th>Конфликт</th><th>Уровень</th><th>Категория</th><th>Вероятность</th><th>Митигация</th></tr></thead>
+      <tbody>
+        <tr><td>ЦАК-1</td><td>Специалист категории сам загружает инициативу И сам её согласует (обе роли на один факультет)</td><td>CUS + AUT</td><td><span class="badge badge-high">Высокий</span></td><td>K2</td><td>Средняя</td><td>Запрет совмещения ролей «специалист» и «согласующий»; обязательное 2-уровневое согласование</td></tr>
+        <tr><td>ЦАК-2</td><td>Администратор системы назначает себе права согласующего на свои же факультеты</td><td>AUT + CUS (admin override)</td><td><span class="badge badge-medium">Средний</span></td><td>K3</td><td>Низкая</td><td>Запрет администратору назначать себе роли; аудит назначений</td></tr>
+        <tr><td>ЦАК-3</td><td>Ручное редактирование КИПов до отправки в ТОРГ — подмена поставщика/получателя/типа перевалки</td><td>CUS + REC</td><td><span class="badge badge-high">Высокий</span></td><td>K1</td><td>Средняя</td><td>Верификация КИПов перед отправкой (VER-роль); аудит-лог изменений КИПов</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Кросс-продуктовые риски (X1–X7)</h3>
+  <div class="card">
+    <table>
+      <thead><tr><th>ID</th><th>Продукты</th><th>Сценарий</th><th>Уровень</th><th>Категория</th><th>Митигация</th></tr></thead>
+      <tbody>
+        <tr><td>X1</td><td>Promo × Интеллектуальные цены</td><td>Промо-акция + изменение цен одним лицом</td><td><span class="badge badge-critical">Критический</span></td><td>K1</td><td>Разделение ролей промо-менеджер / price-аналитик</td></tr>
+        <tr><td>X2</td><td>ЛККМ × Promo × Диалог</td><td>Переговоры + промо-условия + коммуникация с поставщиком</td><td><span class="badge badge-critical">Критический</span></td><td>K1</td><td>Трёхстороннее согласование</td></tr>
+        <tr><td>X3</td><td>ЦУПП × Promo × Цены</td><td>Планограмма + промо + цены — полный цикл мерчандайзинга</td><td><span class="badge badge-high">Высокий</span></td><td>K1</td><td>Разделение по этапам workflow</td></tr>
+        <tr><td>X4</td><td>RAP × Все продукты</td><td>Миграция RAP: доступ к данным всех продуктов одним сервисом</td><td><span class="badge badge-critical">Критический</span></td><td>K1+K3</td><td>Изоляция данных, read-only для RAP, аудит</td></tr>
+        <tr><td>X5</td><td>ПОД КА × Диалог × ЛККМ</td><td>9 микросервисов + коммуникация + переговоры</td><td><span class="badge badge-high">Высокий</span></td><td>K2</td><td>Service mesh, mTLS, аудит</td></tr>
+        <tr><td>X6</td><td>RGM × Все продукты</td><td>RGM-дашборд: агрегация данных + принятие решений</td><td><span class="badge badge-high">Высокий</span></td><td>K1</td><td>Read-only доступ, верификация данных</td></tr>
+        <tr><td>X7</td><td><strong>ЦАК × ТОРГ ERP (SAP)</strong></td><td>Ассортиментное решение из ЦАК влияет на закупки/логистику. Один человек управляет ассортиментом (ЦАК) и закупками (ТОРГ)</td><td><span class="badge badge-high">Высокий</span></td><td>K1</td><td>Разграничение ролей между ЦАК и ТОРГ; сквозной аудит</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Гэпы (G1–G5)</h3>
+  <div class="card">
+    <table>
+      <thead><tr><th>ID</th><th>Гэп</th><th>Уровень</th><th>У кого</th><th>Что нужно</th><th>Дедлайн</th></tr></thead>
+      <tbody>
+        <tr><td>G1</td><td>Нет единого SSO (Keycloak не покрывает все продукты)</td><td><span class="badge badge-critical">Критический</span></td><td>Core Services</td><td>Единая аутентификация для всех 10 продуктов</td><td>30 дней</td></tr>
+        <tr><td>G2</td><td>RAP в миграции — нет контроля доступа</td><td><span class="badge badge-critical">Критический</span></td><td>Core Services</td><td>RBAC для RAP, изоляция данных</td><td>14 дней</td></tr>
+        <tr><td>G3</td><td>Нет audit trail в продуктах Орбиты</td><td><span class="badge badge-critical">Критический</span></td><td>Все продукты</td><td>Централизованный аудит-лог</td><td>60 дней</td></tr>
+        <tr><td>G4</td><td>Нет workflow-аппрувов в Promo/ЦУПП</td><td><span class="badge badge-high">Высокий</span></td><td>Promo, ЦУПП</td><td>Обязательные согласования перед публикацией</td><td>45 дней</td></tr>
+        <tr><td>G5</td><td><strong>Нет RBAC-матрицы ЦАК</strong> (кто реально имеет какие факультеты + роли)</td><td><span class="badge badge-high">Высокий</span></td><td>Владелец ЦАК / Команда Орбита УП</td><td>Матрица lkkm.x5.ru/matrix/[ID] — полный список пользователей с ролями по факультетам</td><td>30 дней</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Топ-5 рисков Орбита</h3>
+  <div class="card">
+    <ol class="top5-list">
+      <li><span class="rank">1.</span> <strong>X4 — RAP миграция</strong> — доступ к данным всех продуктов одним сервисом без контроля. <span class="badge badge-critical">Критический</span> K1+K3</li>
+      <li><span class="rank">2.</span> <strong>X2 — ЛККМ × Promo × Диалог</strong> — полный цикл переговоров + промо + коммуникация. <span class="badge badge-critical">Критический</span> K1</li>
+      <li><span class="rank">3.</span> <strong>X1 — Promo × Цены</strong> — промо-акция + изменение цен одним лицом. <span class="badge badge-critical">Критический</span> K1</li>
+      <li><span class="rank">4.</span> <strong>S3 — МЦО (OPEC)</strong> — формирование, применение и отмена цен. <span class="badge badge-critical">Критический</span> K1</li>
+      <li><span class="rank">5.</span> <strong>S8 — ДТО</strong> — формирование, корректировка и отправка ДТО. <span class="badge badge-critical">Критический</span> K1</li>
+    </ol>
+  </div>
+
+  <h3>Архитектура Орбита</h3>
+  <div class="mermaid-container">
+    <pre class="mermaid">
+flowchart TB
+    subgraph Orbita["Платформа Орбита (Коммерческая)"]
+        direction TB
+        Promo["Promo<br/>What if / Catman / DS"]
+        Prices["Интеллектуальные<br/>цены<br/>OPEC / Транспорт цен"]
+        LKKM["ЛККМ<br/>Nego / ARM"]
+        ZUPP["ЦУПП<br/>Планограммы / ДТО"]
+        Dialog["Диалог 2.0<br/>Dialog.x5.ru"]
+        Core["Core Services<br/>RAP / ПОД КА"]
+        RGM["RGM<br/>дашборд"]
+        Demand["Управление<br/>потребностями"]
+        PLU["Жизненный<br/>цикл PLU"]
+        ZAK["ЦАК<br/>man.staff.orbita.x5.ru"]
+    end
+
+    subgraph CrossSys["Сквозные системы"]
+        Keycloak["Keycloak"]
+        Matomo["Matomo"]
+        RAP["RAP (миграция)"]
+    end
+
+    subgraph External["Внешние интеграции"]
+        TORG["ТОРГ ERP (SAP)"]
+        ESM["ESM"]
+        PTP["ПЦП"]
+        SRP["SRP"]
+        NCA["НЦА"]
+        Quota["Квоты"]
+    end
+
+    Promo --> Keycloak
+    Prices --> Keycloak
+    LKKM --> Keycloak
+    ZUPP --> Keycloak
+    Dialog --> Keycloak
+    Core --> Keycloak
+    RGM --> Keycloak
+    Demand --> Keycloak
+    PLU --> Keycloak
+    ZAK --> Keycloak
+
+    Core --> RAP
+    Promo --> Matomo
+    Prices --> Matomo
+    LKKM --> Matomo
+
+    ZAK --> TORG
+    ZAK --> ESM
+    ZAK --> PTP
+    ZAK --> SRP
+    ZAK --> NCA
+    ZAK --> Quota
+
+    style Orbita fill:#161b22,stroke:#58a6ff,stroke-width:2px
+    style CrossSys fill:#0d1117,stroke:#8b949e,stroke-width:1px
+    style External fill:#0d1117,stroke:#69db7c,stroke-width:1px
+    style ZAK fill:#1c2128,stroke:#58a6ff,stroke-width:2px
+    style Core fill:#1c2128,stroke:#ff4444
+    style Prices fill:#1c2128,stroke:#ff4444
+    </pre>
+  </div>
+</section>
+
+<!-- ==================== РАЗДЕЛ 3: СВОДКА ==================== -->
+<section id="summary">
+  <h2>Раздел 3: Сводная таблица по обеим платформам</h2>
+  <div class="card">
+    <table class="summary-table">
+      <thead>
+        <tr><th>Метрика</th><th>СФЕРА (HR)</th><th>Орбита (Коммерческая)</th><th>Итого</th></tr>
+      </thead>
+      <tbody>
+        <tr><td>Продуктов</td><td>8</td><td>10 (9 + ЦАК)</td><td><strong>18</strong></td></tr>
+        <tr><td>Информационных систем</td><td>~10 (сквозные)</td><td>23+</td><td><strong>33+</strong></td></tr>
+        <tr><td>SoD-сценариев</td><td>37</td><td>11 (8 + 3 ЦАК)</td><td><strong>48</strong></td></tr>
+        <tr><td>Кросс-продуктовых рисков</td><td>10 (X1–X10)</td><td>7 (X1–X6 + X7 ЦАК)</td><td><strong>17</strong></td></tr>
+        <tr><td>Гэпов</td><td>9 (G1–G9)</td><td>5 (G1–G4 + G5 ЦАК)</td><td><strong>14</strong></td></tr>
+        <tr><td>Критических рисков</td><td>2 (X1, X7)</td><td>4 (S3, S8, X1, X2, X4)</td><td><strong>6</strong></td></tr>
+        <tr><td>Высоких рисков</td><td>12</td><td>5</td><td><strong>17</strong></td></tr>
+        <tr><td>Средних рисков</td><td>14</td><td>2</td><td><strong>16</strong></td></tr>
+        <tr><td>Низких рисков</td><td>9</td><td>0</td><td><strong>9</strong></td></tr>
+        <tr><td>Владелец</td><td>HR-платформа X5 Group</td><td>Денис Вечканов (ком. дир. ТС5)</td><td>—</td></tr>
+        <tr><td>Спонсор</td><td>—</td><td>Екатерина Лобачева (президент X5)</td><td>—</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Сводка по уровням риска</h3>
+  <div class="stats-row">
+    <div class="stat-card" style="border-color: var(--critical);">
+      <div class="number" style="color: var(--critical);">6</div>
+      <div class="label">Критических</div>
+    </div>
+    <div class="stat-card" style="border-color: var(--high);">
+      <div class="number" style="color: var(--high);">17</div>
+      <div class="label">Высоких</div>
+    </div>
+    <div class="stat-card" style="border-color: var(--medium);">
+      <div class="number" style="color: var(--medium);">16</div>
+      <div class="label">Средних</div>
+    </div>
+    <div class="stat-card" style="border-color: var(--low);">
+      <div class="number" style="color: var(--low);">9</div>
+      <div class="label">Низких</div>
+    </div>
+  </div>
+
+  <h3>Приоритетные гэпы (оба раздела)</h3>
+  <div class="card">
+    <table>
+      <thead><tr><th>Платформа</th><th>ID</th><th>Гэп</th><th>Уровень</th><th>Дедлайн</th></tr></thead>
+      <tbody>
+        <tr><td>СФЕРА</td><td>G1</td><td>Нет RBAC-матрицы HR Core</td><td><span class="badge badge-critical">Критический</span></td><td>30 дней</td></tr>
+        <tr><td>СФЕРА</td><td>G2</td><td>Нет audit trail в УHRS</td><td><span class="badge badge-critical">Критический</span></td><td>45 дней</td></tr>
+        <tr><td>СФЕРА</td><td>G3</td><td>Нет разделения ЗП-функций</td><td><span class="badge badge-critical">Критический</span></td><td>30 дней</td></tr>
+        <tr><td>Орбита</td><td>G1</td><td>Нет единого SSO</td><td><span class="badge badge-critical">Критический</span></td><td>30 дней</td></tr>
+        <tr><td>Орбита</td><td>G2</td><td>RAP в миграции — нет контроля доступа</td><td><span class="badge badge-critical">Критический</span></td><td>14 дней</td></tr>
+        <tr><td>Орбита</td><td>G3</td><td>Нет audit trail в продуктах Орбиты</td><td><span class="badge badge-critical">Критический</span></td><td>60 дней</td></tr>
+        <tr><td>Орбита</td><td>G5</td><td>Нет RBAC-матрицы ЦАК</td><td><span class="badge badge-high">Высокий</span></td><td>30 дней</td></tr>
+      </tbody>
+    </table>
+  </div>
+</section>
+
+</div>
+
+<div class="footer">
+  SoD-анализ платформ X5 — Разделение обязанностей &nbsp;|&nbsp; 21.09.2026 &nbsp;|&nbsp; Конфиденциально
+</div>
+
+<script>
+mermaid.initialize({
+  startOnLoad: true,
+  theme: 'dark',
+  themeVariables: {
+    primaryColor: '#1c2128',
+    primaryTextColor: '#c9d1d9',
+    primaryBorderColor: '#58a6ff',
+    lineColor: '#58a6ff',
+    secondaryColor: '#161b22',
+    tertiaryColor: '#0d1117',
+    fontFamily: '-apple-system, BlinkMacSystemFont, Segoe UI, Roboto, sans-serif',
+    fontSize: '14px'
+  }
+});
+</script>
+
+</body>
+</html>
